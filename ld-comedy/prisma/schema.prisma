@@ -1,0 +1,365 @@
+// This is your Prisma schema file for LD Comedy
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String
+  email                 String    @unique
+  password              String
+  emailVerified         DateTime?
+  emailVerificationToken String?
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+  isVerified            Boolean   @default(false)
+  role                  Role      @default(PENDING)
+  phoneNumber           String?
+  profileImage          String?
+  address               String?
+  city                  String?
+  website               String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  // Relations
+  artistProfile         ArtistProfile?
+  theaterProfile        TheaterProfile?
+  bookings              Booking[] @relation("UserBookings")
+  ownedEvents           Event[]   @relation("EventOwner")
+}
+
+model ArtistProfile {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @unique @db.ObjectId
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations artistiques
+  stageName         String?
+  bio               String?
+  specialties       String[]  // ["Stand-up", "Théâtre", "Improvisation"]
+  experience        String?   // "Débutant", "Intermédiaire", "Confirmé"
+  yearsOfExperience Int?
+  description       String?
+  
+  // Localisation et disponibilité
+  location          String?
+  region            String?
+  availableForTravel Boolean  @default(false)
+  isAvailable       Boolean  @default(true)
+  isPublic          Boolean  @default(true)
+  isVerified        Boolean  @default(false)
+  
+  // Tarification
+  minimumFee        Float?
+  maxDistance       Int?
+  
+  // Médias
+  coverImage        String?
+  videos            Video[]
+  photos            Photo[]
+  
+  // Réseaux sociaux
+  socialLinks       SocialLinks?
+  
+  // Statistiques
+  profileViews      Int      @default(0)
+  totalLikes        Int      @default(0)
+  totalShows        Int      @default(0)
+  rating            String?
+  
+  // Relations
+  favorites         Favorite[]
+  eventParticipations EventParticipant[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model TheaterProfile {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String    @unique @db.ObjectId
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations du théâtre
+  theaterName       String?
+  description       String?
+  history           String?
+  
+  // Localisation
+  address           String?
+  city              String?
+  postalCode        String?
+  region            String?
+  coordinates       Coordinates?
+  
+  // Caractéristiques techniques
+  capacity          Int?
+  stageType         String?
+  facilities        Facility[]
+  
+  // Types de programmation
+  theaterType       String?
+  programmingTypes  String[]
+  preferredGenres   String[]
+  
+  // Informations pratiques
+  openingHours      OpeningHours?
+  ticketPrices      TicketPrices?
+  
+  // Images
+  coverImage        String?
+  galleryImages     String[]
+  
+  // Réseaux sociaux
+  socialLinks       SocialLinks?
+  
+  // Paramètres
+  isActive          Boolean  @default(true)
+  isVerified        Boolean  @default(false)
+  acceptsSubmissions Boolean @default(true)
+  
+  // Statistiques
+  totalEvents       Int      @default(0)
+  totalArtists      Int      @default(0)
+  averageRating     Float?
+  
+  // Relations
+  ownedEvents       Event[]  @relation("TheaterEvents")
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Event {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String?
+  image           String?
+  category        String
+  genre           String?
+  
+  // Dates et horaires
+  startDate       DateTime
+  endDate         DateTime?
+  startTime       String?
+  duration        Int?      // en minutes
+  
+  // Lieu
+  theater         TheaterProfile? @relation("TheaterEvents", fields: [theaterId], references: [id])
+  theaterId       String?   @db.ObjectId
+  venue           String?   // Si pas de théâtre associé
+  address         String?
+  
+  // Tarification
+  ticketPrice     Float?
+  capacity        Int?
+  availableSeats  Int?
+  
+  // Informations
+  ageRating       String?   // "Tout public", "12+", "16+"
+  language        String?   // "Français", "Anglais"
+  
+  // Statut et visibilité
+  status          EventStatus @default(PLANNED)
+  isPublic        Boolean   @default(false)
+  isFeatured      Boolean   @default(false)
+  
+  // Métadonnées
+  tags            String[]
+  requirements    String[]  // Exigences techniques
+  
+  // Relations
+  owner           User      @relation("EventOwner", fields: [ownerId], references: [id])
+  ownerId         String    @db.ObjectId
+  participants    EventParticipant[]
+  bookings        Booking[] @relation("EventBookings")
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model EventParticipant {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  event     Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String        @db.ObjectId
+  artist    ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId  String        @db.ObjectId
+  role      String?       // "Artiste principal", "Invité", "Ouverture"
+  fee       Float?        // Cachet
+  status    ParticipantStatus @default(INVITED)
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  @@unique([eventId, artistId])
+}
+
+model Video {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  url         String
+  thumbnail   String?
+  duration    Int?          // en secondes
+  category    String?       // "Performance", "Démo", "Extrait"
+  tags        String[]
+  
+  // Métadonnées
+  fileSize    Int?
+  format      String?
+  quality     String?
+  
+  // Paramètres
+  isPublic    Boolean       @default(true)
+  isFeatured  Boolean       @default(false)
+  
+  // Statistiques
+  views       Int           @default(0)
+  likes       Int           @default(0)
+  
+  // Relations
+  artist      ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId    String        @db.ObjectId
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Photo {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String?
+  description String?
+  url         String
+  category    String?       // "Portrait", "Spectacle", "Backstage"
+  tags        String[]
+  
+  // Métadonnées
+  width       Int?
+  height      Int?
+  fileSize    Int?
+  format      String?
+  
+  // Paramètres
+  isPublic    Boolean       @default(true)
+  isFeatured  Boolean       @default(false)
+  isProfilePicture Boolean  @default(false)
+  
+  // Relations
+  artist      ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId    String        @db.ObjectId
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Favorite {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  theaterId String        @db.ObjectId
+  artist    ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistId  String        @db.ObjectId
+  notes     String?       // Notes privées du théâtre
+  
+  createdAt DateTime      @default(now())
+  
+  @@unique([theaterId, artistId])
+}
+
+model Booking {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  startDate   DateTime
+  endDate     DateTime?
+  totalAmount Float
+  quantity    Int           @default(1) // Nombre de places
+  status      BookingStatus @default(PENDING)
+  
+  // Relations
+  user        User          @relation("UserBookings", fields: [userId], references: [id])
+  userId      String        @db.ObjectId
+  event       Event         @relation("EventBookings", fields: [eventId], references: [id])
+  eventId     String        @db.ObjectId
+  
+  // Informations de contact
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Types composés
+type SocialLinks {
+  facebook  String?
+  instagram String?
+  youtube   String?
+  tiktok    String?
+  website   String?
+}
+
+type Coordinates {
+  lat Float
+  lng Float
+}
+
+type Facility {
+  name        String
+  available   Boolean
+  description String?
+}
+
+type OpeningHours {
+  monday    String?
+  tuesday   String?
+  wednesday String?
+  thursday  String?
+  friday    String?
+  saturday  String?
+  sunday    String?
+}
+
+type TicketPrices {
+  adult    Float?
+  student  Float?
+  senior   Float?
+  child    Float?
+  group    Float?
+}
+
+// Enums
+enum Role {
+  PENDING
+  ARTIST
+  THEATER
+  ADMIN
+}
+
+enum EventStatus {
+  PLANNED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  POSTPONED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+enum ParticipantStatus {
+  INVITED
+  CONFIRMED
+  DECLINED
+  CANCELLED
+}

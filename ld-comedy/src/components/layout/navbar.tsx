@@ -19,25 +19,25 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Accueil' },
-    { href: '/spectacles', label: 'Spectacles' },
+    { href: '/spectacles', label: 'Show' },
     { href: '/comediens', label: 'Artistes' },
-    { href: '/actualites', label: 'Actualités' },
     { href: '/contact', label: 'Contact' },
   ]
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/90 backdrop-blur-sm border-b' : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-sm border-b' : 'bg-transparent'
+        }`}
     >
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
-          <Link 
-            href="/" 
-            className={`text-2xl font-bold font-geist-sans ${isScrolled ? 'text-red-950' : 'text-white'}`}
-          >
-            LD Comedy
+          <Link href="/" className="flex items-center">
+            <img
+              src="/image/logo_ld3.png"
+              alt="logo_ld3.png"
+              className={`w-20 h-auto transition-all duration-300 ${isScrolled ? '' : 'invert'
+                }`}
+            />
           </Link>
 
           {/* Desktop Menu */}
@@ -46,9 +46,8 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors font-geist-sans text-sm uppercase tracking-wider ${
-                  isScrolled ? 'text-gray-600 hover:text-amber-500' : 'text-white/90 hover:text-amber-400'
-                }`}
+                className={`transition-colors font-geist-sans text-sm uppercase tracking-wider ${isScrolled ? 'text-gray-600 hover:text-amber-500' : 'text-white/90 hover:text-amber-400'
+                  }`}
               >
                 {link.label}
               </Link>
@@ -109,6 +108,6 @@ export function Navbar() {
           </motion.div>
         )}
       </div>
-    </nav>
+    </nav >
   )
 }

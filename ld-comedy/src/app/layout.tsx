@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LD Comedy - Club de Stand-up",
   description: "Découvrez les meilleurs talents du stand-up dans notre comedy club",
+  icons: {
+    icon: "/logo_ld.png", // je change le logo de internet
+  },
 }
 
 export default function RootLayout({

@@ -1,75 +1,84 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextResponse } from "next/server"
+import prisma from "@/lib/prisma"
+import { ObjectId } from "mongodb"
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
-// GET: Récupérer un comédien par son ID
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const comedian = await prisma.comedian.findUnique({
-      where: { id: params.id },
-      include: { shows: true }
-    });
+    const id = context.params.id
+
+    // Vérifie si l'ID est valide
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "ID de l'artiste invalide" },
+        { status: 400 }
+      )
+    }
+
+    const comedian = await prisma.user.findFirst({
+      where: {
+        id: id,
+        role: "ARTIST"
+      },
+      select: {
+        id: true,
+        name: true,
+        profileImage: true,
+        description: true,
+        specialty: true,
+        socialLinks: true,
+        shows: {
+          where: {
+            date: {
+              gte: new Date()
+            }
+          },
+          orderBy: {
+            date: 'asc'
+          },
+          select: {
+            id: true,
+            title: true,
+            venue: true,
+            date: true,
+            time: true,
+            price: true,
+            status: true
+          }
+        }
+      }
+    })
 
     if (!comedian) {
       return NextResponse.json(
-        { error: "Comédien non trouvé" },
+        { error: "Artiste non trouvé" },
         { status: 404 }
-      );
+      )
     }
 
-    return NextResponse.json(comedian);
+    // Formatage des dates pour l'affichage et ajout des statistiques
+    const formattedComedian = {
+      ...comedian,
+      totalShows: comedian.shows?.length || 0,
+      shows: comedian.shows?.map(show => ({
+        ...show,
+        date: new Date(show.date).toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      })) || []
+    }
+
+    return NextResponse.json(formattedComedian)
   } catch (error) {
-    console.error("Erreur lors de la récupération du comédien:", error);
+    console.error("Erreur détaillée:", error)
     return NextResponse.json(
-      { error: "Erreur lors de la récupération du comédien" },
+      { error: "Erreur lors de la récupération des données de l'artiste" },
       { status: 500 }
-    );
+    )
   }
 }
-
-// PUT: Mettre à jour un comédien
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  try {
-    const data = await request.json();
-    
-    const comedian = await prisma.comedian.update({
-      where: { id: params.id },
-      data: {
-        name: data.name,
-        biography: data.biography,
-        photoUrl: data.photoUrl,
-        showIds: data.showIds || []
-      }
-    });
-    
-    return NextResponse.json(comedian);
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour du comédien:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la mise à jour du comédien" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE: Supprimer un comédien
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    await prisma.comedian.delete({
-      where: { id: params.id }
-    });
-    
-    return NextResponse.json({ message: "Comédien supprimé avec succès" });
-  } catch (error) {
-    console.error("Erreur lors de la suppression du comédien:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la suppression du comédien" },
-      { status: 500 }
-    );
-  }
-} 

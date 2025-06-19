@@ -44,11 +44,8 @@ export default function UserStatus() {
       <div className="flex space-x-2">
         <Link href="/connexion">
           <Button className="bg-transparent border border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-red-950">
-            Connexion
+            S'identifier
           </Button>
-        </Link>
-        <Link href="/inscription">
-          <Button className="bg-amber-400 text-red-950 hover:bg-amber-500">Inscription</Button>
         </Link>
       </div>
     )
@@ -97,12 +94,12 @@ export default function UserStatus() {
                 className="block px-4 py-2 text-sm text-white hover:bg-amber-400/20 rounded-md"
                 onClick={() => setShowMenu(false)}
               >
-                Mon portfolio
+                Mon profil
               </Link>
             )}
             <button
               onClick={() => {
-                signOut({ callbackUrl: "/" })
+                signOut({ callbackUrl: "/dashboard-artiste/profile" })
                 setShowMenu(false)
               }}
               className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-md"

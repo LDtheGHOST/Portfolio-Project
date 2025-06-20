@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { updateTheaterProfile } from "@/app/actions/theater-actions"
+import { updateTheaterProfile, addTheaterPoster, getTheaterProfile } from "@/app/actions/theater-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Building2, Save, User, ArrowLeft } from "lucide-react"
+import MediaUploader from '@/components/ui/MediaUploader'
 
 export default function ProfilePage() {
   const { data: session } = useSession()
@@ -27,14 +28,16 @@ export default function ProfilePage() {
     theaterType: "",
     // Supprimé website temporairement car il n'existe pas dans le schéma
   })
+  const [gallery, setGallery] = useState<string[]>([])
+  const [coverImage, setCoverImage] = useState<string>("")
 
   useEffect(() => {
     // Charger le profil existant
     const loadProfile = async () => {
       try {
-        const response = await fetch("/api/theater/profile")
+        const response = await fetch("/api/theater/profile");
         if (response.ok) {
-          const data = await response.json()
+          const data = await response.json();
           if (data.profile) {
             setProfile({
               theaterName: data.profile.theaterName || "",
@@ -44,14 +47,16 @@ export default function ProfilePage() {
               postalCode: data.profile.postalCode || "",
               capacity: data.profile.capacity?.toString() || "",
               theaterType: data.profile.theaterType || "",
-            })
+            });
+            setGallery(data.profile.galleryImages || []);
+            setCoverImage(data.profile.coverImage || "");
           }
         }
       } catch (error) {
-        console.error("Erreur lors du chargement du profil:", error)
+        console.error("Erreur lors du chargement du profil:", error);
       }
-    }
-    loadProfile()
+    };
+    loadProfile();
   }, [])
 
   const handleSubmit = async (formData: FormData) => {
@@ -72,6 +77,37 @@ export default function ProfilePage() {
   const handleBackToDashboard = () => {
     router.push("/dashboard-theatre")
   }
+
+  const handleMediaUpload = async (files: File[]) => {
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+      if (data.url) {
+        // Ajoute l'affiche à la galerie côté serveur
+        await addTheaterPoster(data.url)
+        setGallery((prev) => [...prev, data.url])
+      }
+    }
+  }
+
+  const handleProfileImageUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+    const formData = new FormData();
+    formData.append("file", files[0]);
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.url) {
+      // Met à jour la photo de profil côté serveur
+      await fetch("/api/theater/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coverImage: data.url }),
+      });
+      setCoverImage(data.url);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-[#2d0b18] to-[#3a1c4d] text-white p-4 md:p-8">
@@ -110,32 +146,32 @@ export default function ProfilePage() {
 
         <form action={handleSubmit} className="space-y-6">
           {/* Informations générales */}
-          <Card className="bg-white/10 backdrop-blur-md border-amber-400/30">
+          <Card className="bg-gradient-to-br from-black via-[#2d0b18] to-[#3a1c4d] border border-amber-400/40 shadow-xl rounded-2xl">
             <CardHeader>
-              <CardTitle className="text-amber-300 flex items-center gap-2">
-                <User className="w-5 h-5" />
+              <CardTitle className="text-3xl font-extrabold text-amber-400 flex items-center gap-2">
+                <User className="w-7 h-7" />
                 Informations générales
               </CardTitle>
-              <CardDescription className="text-gray-300">Les informations principales de votre théâtre</CardDescription>
+              <CardDescription className="text-lg text-gray-200 mt-2">Complétez les informations principales de votre théâtre pour une page publique attractive.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="theaterName" className="text-white">
-                    Nom du théâtre *
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <Label htmlFor="theaterName" className="text-lg text-amber-300 font-semibold">
+                    Nom du théâtre <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     id="theaterName"
                     name="theaterName"
                     value={profile.theaterName}
                     onChange={(e) => setProfile({ ...profile, theaterName: e.target.value })}
-                    className="bg-black/50 border-amber-400/30 text-white"
+                    className="bg-black/60 border-2 border-amber-400/40 focus:border-amber-400 text-white px-5 py-3 rounded-xl text-lg shadow-inner transition-all"
                     placeholder="Ex: Théâtre de la Comédie"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="theaterType" className="text-white">
+                <div className="space-y-4">
+                  <Label htmlFor="theaterType" className="text-lg text-amber-300 font-semibold">
                     Type de théâtre
                   </Label>
                   <Select
@@ -143,7 +179,7 @@ export default function ProfilePage() {
                     value={profile.theaterType}
                     onValueChange={(value) => setProfile({ ...profile, theaterType: value })}
                   >
-                    <SelectTrigger className="bg-black/50 border-amber-400/30 text-white">
+                    <SelectTrigger className="bg-black/60 border-2 border-amber-400/40 focus:border-amber-400 text-white px-5 py-3 rounded-xl text-lg shadow-inner transition-all">
                       <SelectValue placeholder="Sélectionnez un type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -156,9 +192,8 @@ export default function ProfilePage() {
                   </Select>
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-white">
+              <div className="space-y-4 mt-8">
+                <Label htmlFor="description" className="text-lg text-amber-300 font-semibold">
                   Description
                 </Label>
                 <Textarea
@@ -166,12 +201,25 @@ export default function ProfilePage() {
                   name="description"
                   value={profile.description}
                   onChange={(e) => setProfile({ ...profile, description: e.target.value })}
-                  className="bg-black/50 border-amber-400/30 text-white min-h-[100px]"
+                  className="bg-black/60 border-2 border-amber-400/40 focus:border-amber-400 text-white px-5 py-3 rounded-xl text-lg shadow-inner min-h-[120px] transition-all"
                   placeholder="Décrivez votre théâtre, son histoire, sa programmation..."
                 />
               </div>
             </CardContent>
           </Card>
+
+          {/* Section moderne pour la photo de profil */}
+          <div className="flex flex-col items-center gap-4 my-8">
+            <div className="relative">
+              <img
+                src={coverImage || "/ld_show.png"}
+                alt="Photo de profil du théâtre"
+                className="w-32 h-32 rounded-full object-cover border-4 border-amber-400 shadow-lg"
+              />
+            </div>
+            <MediaUploader onUpload={handleProfileImageUpload} accept="image/*" multiple={false} />
+            <span className="text-xs text-gray-400">Format recommandé : carré, max 2Mo</span>
+          </div>
 
           {/* Localisation */}
           <Card className="bg-white/10 backdrop-blur-md border-amber-400/30">

@@ -17,6 +17,7 @@ import {
   Edit3,
 } from "lucide-react"
 import Link from "next/link"
+import MediaUploader from '@/components/ui/MediaUploader';
 
 export default function ProfileArtiste() {
   const { data: session, status } = useSession()
@@ -122,6 +123,12 @@ export default function ProfileArtiste() {
       setIsSaving(false)
     }
   }
+
+  const handleMediaUpload = (files: File[]) => {
+    // Ici, vous pouvez envoyer les fichiers à une API ou les stocker dans le state
+    // Exemple : uploadMedia(files)
+    console.log('Fichiers uploadés:', files);
+  };
 
   if (status === "loading") {
     return (
@@ -478,6 +485,12 @@ export default function ProfileArtiste() {
                 {profileData.biographie || "Aucune biographie renseignée"}
               </p>
             )}
+          </div>
+
+          <div className="my-8">
+            <h2 className="text-xl font-bold mb-2">Galerie média</h2>
+            <MediaUploader onUpload={handleMediaUpload} />
+            {/* Ici, vous pourrez afficher la galerie des médias uploadés */}
           </div>
         </main>
       </div>

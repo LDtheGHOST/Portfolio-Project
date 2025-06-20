@@ -129,40 +129,11 @@ export default function Spectacles() {
                     <h3 className="text-2xl font-bold mb-2 group-hover:text-amber-400 transition-colors">
                       {theatre.theaterProfile?.theaterName || theatre.name}
                     </h3>
-                    <p className="text-gray-300 mb-4">
-                      {theatre.description || 'Description non disponible'}
-                    </p>
-                    <div className="flex flex-col gap-2 text-sm text-gray-300">
-                      <span>{theatre.address || 'Adresse non spécifiée'}</span>
-                      <span>{theatre.phoneNumber || 'Téléphone non spécifié'}</span>
-                      {theatre.theaterProfile?.facilities && theatre.theaterProfile.facilities.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {theatre.theaterProfile.facilities.map((facility, index) => (
-                            <span key={index} className="bg-red-900/50 px-2 py-1 rounded-md text-xs">
-                              {facility}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {theatre.theaterProfile?.programmingTypes && theatre.theaterProfile.programmingTypes.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {theatre.theaterProfile.programmingTypes.map((type, index) => (
-                            <span key={index} className="bg-amber-400/20 px-2 py-1 rounded-md text-xs text-amber-400">
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs">
-                        <span>{theatre.theaterProfile?.totalEvents || 0} événements</span>
-                        <span>{theatre.theaterProfile?.totalArtists || 0} artistes</span>
-                        {theatre.theaterProfile?.averageRating && (
-                          <span>{theatre.theaterProfile.averageRating.toFixed(1)} / 5</span>
-                        )}
-                      </div>
+                    <div className="text-sm text-amber-400 mb-2">
+                      Capacité : {theatre.theaterProfile?.capacity || 'Non spécifiée'} places
                     </div>
                     <Button 
-                      onClick={() => router.push(`/theatre/${theatre.id}`)}
+                      onClick={() => router.push(`/theatre/${theatre.theaterProfile?.id}`)}
                       className="mt-4 bg-amber-400 text-red-950 hover:bg-amber-500"
                     >
                       Voir plus de détails

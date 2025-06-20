@@ -7,6 +7,7 @@ import * as LucideIcons from "lucide-react"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import React from "react"
+import { Bell, Heart, MessageCircle } from "lucide-react"
 
 const Icons = LucideIcons as unknown as Record<string, React.ElementType>;
 
@@ -14,6 +15,7 @@ export default function DashboardTheatre() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [activeSection, setActiveSection] = useState("profile")
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Données pour les artistes en vedette
   const featuredArtists = [
@@ -45,6 +47,14 @@ export default function DashboardTheatre() {
       router.replace("/connexion")
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/theater/notifications")
+        .then(res => res.json())
+        .then(data => setNotifications(data.notifications || []));
+    }
+  }, [status]);
 
   if (status === "loading") {
     return (
@@ -227,6 +237,38 @@ export default function DashboardTheatre() {
 
       {/* Contenu principal */}
       <main className="md:ml-64 min-h-screen pb-20 md:pb-0 px-2 md:px-12 pt-6 md:pt-8">
+        {/* SECTION NOTIFICATIONS */}
+        <section className="mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-amber-300 mb-4 flex items-center gap-2">
+            <Bell className="w-6 h-6 text-amber-400" /> Notifications
+          </h2>
+          {notifications.length === 0 ? (
+            <div className="text-gray-400">Aucune notification récente.</div>
+          ) : (
+            <ul className="space-y-3">
+              {notifications.slice(0, 10).map((notif, idx) => (
+                <li key={idx} className="flex items-center gap-4 bg-black/40 rounded-xl p-3 border border-amber-400/10">
+                  <img src={notif.posterImage} alt="Affiche" className="w-12 h-12 rounded-lg object-cover border border-amber-400/20" />
+                  {notif.user?.profileImage ? (
+                    <img src={notif.user.profileImage} alt={notif.user.name} className="w-8 h-8 rounded-full object-cover border border-amber-400/20" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-400 font-bold">{notif.user?.name?.[0] || "?"}</div>
+                  )}
+                  <div className="flex-1">
+                    <div className="text-white font-semibold">
+                      {notif.type === "like" ? (
+                        <span className="flex items-center gap-1 text-amber-400"><Heart className="w-4 h-4" /> {notif.user.name} a liké une affiche</span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-blue-300"><MessageCircle className="w-4 h-4" /> {notif.user.name} a commenté : <span className="italic text-gray-200">"{notif.text}"</span></span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">{new Date(notif.date).toLocaleString()}</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
         <section className="space-y-8">
           {/* Artistes en vedette */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-amber-400/30 p-6 md:p-8 shadow-xl hover:shadow-amber-400/20 transition-shadow">

@@ -32,6 +32,7 @@ model User {
   updatedAt             DateTime  @updatedAt
   socialLinks           Json?
   shows   Show[]
+  posterComments PosterComment[]
   
   // Relations
   artistProfile         ArtistProfile?
@@ -104,6 +105,32 @@ model Show {
   updatedAt DateTime @updatedAt
 }
 
+model Poster {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  imageUrl    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  theater     TheaterProfile @relation(fields: [theaterId], references: [id], onDelete: Cascade)
+  theaterId   String        @db.ObjectId
+  comments    PosterComment[]
+
+  // Likes
+  likes String[] // tableau d'id utilisateur qui ont liké
+}
+
+model PosterComment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text      String
+  createdAt DateTime @default(now())
+  poster    Poster  @relation(fields: [posterId], references: [id], onDelete: Cascade)
+  posterId  String  @db.ObjectId
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String  @db.ObjectId
+}
+
 
 model TheaterProfile {
   id                String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -155,6 +182,7 @@ model TheaterProfile {
   
   // Relations
   ownedEvents       Event[]  @relation("TheaterEvents")
+  posters           Poster[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

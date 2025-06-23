@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { ObjectId } from "mongodb"
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = context.params.id
+    const { id } = await context.params
 
     // Vérifie si l'ID est valide
     if (!ObjectId.isValid(id)) {
@@ -16,6 +18,9 @@ export async function GET(
         { status: 400 }
       )
     }
+
+    // Récupère la session utilisateur
+    const session = await getServerSession(authOptions);
 
     const comedian = await prisma.user.findFirst({
       where: {
@@ -38,14 +43,16 @@ export async function GET(
           orderBy: {
             date: 'asc'
           },
+        },
+        artistProfile: {
           select: {
-            id: true,
-            title: true,
-            venue: true,
-            date: true,
-            time: true,
-            price: true,
-            status: true
+            bio: true,
+            posters: {
+              include: {
+                comments: { include: { user: { select: { name: true, profileImage: true } } } },
+              },
+              orderBy: { createdAt: "desc" },
+            }
           }
         }
       }
@@ -53,32 +60,26 @@ export async function GET(
 
     if (!comedian) {
       return NextResponse.json(
-        { error: "Artiste non trouvé" },
+        { error: "Comédien non trouvé" },
         { status: 404 }
       )
     }
 
-    // Formatage des dates pour l'affichage et ajout des statistiques
-    const formattedComedian = {
+    // Fusionne les infos de l'artiste et de son profil
+    const result = {
       ...comedian,
-      totalShows: comedian.shows?.length || 0,
-      shows: comedian.shows?.map(show => ({
-        ...show,
-        date: new Date(show.date).toLocaleDateString('fr-FR', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      })) || []
+      bio: comedian.artistProfile?.bio || null,
+      posters: comedian.artistProfile?.posters || [],
+      coverImage: comedian.artistProfile?.coverImage || null,
+      specialties: comedian.artistProfile?.specialties || [],
+      region: comedian.artistProfile?.region || null,
+      isOwner: session?.user?.id === comedian.id,
+      user: { id: comedian.id },
     }
+    delete result.artistProfile
 
-    return NextResponse.json(formattedComedian)
-  } catch (error) {
-    console.error("Erreur détaillée:", error)
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des données de l'artiste" },
-      { status: 500 }
-    )
+    return NextResponse.json(result)
+  } catch (e) {
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 })
   }
 }

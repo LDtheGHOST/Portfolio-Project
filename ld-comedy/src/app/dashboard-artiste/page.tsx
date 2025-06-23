@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Home,
   Calendar,
@@ -19,6 +19,9 @@ import {
   Video,
   ArrowLeft,
   Mic,
+  Bell,
+  Heart,
+  MessageCircle,
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
@@ -53,6 +56,15 @@ export default function DashboardArtiste() {
     { title: "Vues du profil", value: "1.2k", icon: User },
     { title: "Messages reçus", value: "45", icon: MessageSquare },
   ]
+
+  const [notifications, setNotifications] = useState<any[]>([])
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetch("/api/artist/notifications")
+        .then((res) => res.json())
+        .then((data) => setNotifications(data.notifications || []))
+    }
+  }, [status])
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -100,6 +112,17 @@ export default function DashboardArtiste() {
       ],
     },
   ]
+
+  const [showPosterModal, setShowPosterModal] = useState(false)
+  const [posterImage, setPosterImage] = useState<string>("")
+  const [posterDescription, setPosterDescription] = useState("")
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Récupérer l'artistId du session.user (si stocké dans le token)
+  // Sinon, il faudra le fetcher côté serveur ou via un endpoint
+  const artistId = session?.user?.artistProfileId // à adapter selon la structure du token
 
   return (
     <div className="fixed inset-0 bg-black text-white overflow-auto">
@@ -209,62 +232,188 @@ export default function DashboardArtiste() {
               <p className="text-sm text-gray-400">Bienvenue, {session?.user?.name}</p>
             </div>
 
-            <button className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg flex items-center transition-colors">
+            <button
+              className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg flex items-center transition-colors"
+              onClick={() => setShowPosterModal(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden md:inline">Nouveau spectacle</span>
+              <span className="hidden md:inline">Nouvelle affiche</span>
             </button>
           </div>
         </header>
 
+        {/* MODALE UPLOAD AFFICHE */}
+        {showPosterModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+            <div className="bg-gray-900 rounded-xl p-8 w-full max-w-md border border-amber-400/30 relative">
+              <button
+                className="absolute top-2 right-2 text-gray-400 hover:text-amber-400"
+                onClick={() => setShowPosterModal(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-lg font-bold text-amber-400 mb-4">Uploader une affiche</h2>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setUploading(true)
+                  setUploadError("")
+                  try {
+                    // Upload image sur Cloudinary ou autre (ici on suppose un champ URL direct)
+                    // Pour une vraie intégration Cloudinary, il faudrait un composant dédié
+                    if (!posterImage) throw new Error("Merci de fournir l'URL de l'image de l'affiche.")
+                    const res = await fetch("/api/poster", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        imageUrl: posterImage,
+                        description: posterDescription,
+                        artistId: artistId,
+                      }),
+                    })
+                    const data = await res.json()
+                    if (!res.ok) throw new Error(data.error || "Erreur lors de l'upload")
+                    setShowPosterModal(false)
+                    setPosterImage("")
+                    setPosterDescription("")
+                    // Optionnel: afficher un toast ou rafraîchir la galerie
+                  } catch (err: any) {
+                    setUploadError(err.message)
+                  } finally {
+                    setUploading(false)
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Image (URL)</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 rounded bg-gray-800 border border-amber-400/20 text-white"
+                    placeholder="https://..."
+                    value={posterImage}
+                    onChange={(e) => setPosterImage(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Description</label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded bg-gray-800 border border-amber-400/20 text-white"
+                    placeholder="Description de l'affiche"
+                    value={posterDescription}
+                    onChange={(e) => setPosterDescription(e.target.value)}
+                  />
+                </div>
+                {uploadError && <div className="text-red-400 text-sm">{uploadError}</div>}
+                <button
+                  type="submit"
+                  className="w-full bg-amber-400 hover:bg-amber-500 text-black font-bold py-2 rounded-lg transition-colors"
+                  disabled={uploading}
+                >
+                  {uploading ? "Envoi..." : "Uploader"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Contenu */}
         <main className="p-4">
-          <div className="space-y-6">
-            {/* Statistiques */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon
-                return (
-                  <div
-                    key={stat.title}
-                    className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-amber-400/20"
-                  >
-                    <Icon className="w-8 h-8 text-amber-400 mb-2" />
-                    <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
-                    <p className="text-gray-400">{stat.title}</p>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Spectacles à venir */}
-            <div className="bg-gray-900/50 rounded-lg border border-amber-400/20">
-              <div className="p-4 border-b border-amber-400/20">
-                <h2 className="text-lg font-semibold text-amber-400">Spectacles à venir</h2>
-              </div>
-              <div className="divide-y divide-amber-400/20">
-                {upcomingShows.map((show) => (
-                  <div key={show.title} className="p-4 hover:bg-gray-800/50 transition-colors">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium text-white">{show.title}</h3>
-                        <p className="text-sm text-gray-400">{show.venue}</p>
-                        <p className="text-sm text-gray-400">
-                          {show.date} à {show.time}
-                        </p>
+          {/* SECTION NOTIFICATIONS */}
+          <section className="mb-8">
+            <h2 className="text-xl md:text-2xl font-bold text-amber-300 mb-4 flex items-center gap-2">
+              <Bell className="w-6 h-6 text-amber-400" /> Notifications
+            </h2>
+            {notifications.length === 0 ? (
+              <div className="text-gray-400">Aucune notification récente.</div>
+            ) : (
+              <ul className="space-y-3">
+                {notifications.slice(0, 10).map((notif, idx) => (
+                  <li key={idx} className="flex items-center gap-4 bg-black/40 rounded-xl p-3 border border-amber-400/10">
+                    <img
+                      src={notif.posterImage}
+                      alt="Affiche"
+                      className="w-12 h-12 rounded-lg object-cover border border-amber-400/20"
+                    />
+                    {notif.user?.profileImage ? (
+                      <img
+                        src={notif.user.profileImage}
+                        alt={notif.user.name}
+                        className="w-8 h-8 rounded-full object-cover border border-amber-400/20"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-400 font-bold">
+                        {notif.user?.name?.[0] || "?"}
                       </div>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          show.status === "Confirmé"
-                            ? "bg-green-400/20 text-green-400"
-                            : "bg-amber-400/20 text-amber-400"
-                        }`}
-                      >
-                        {show.status}
-                      </span>
+                    )}
+                    <div className="flex-1">
+                      <div className="text-white font-semibold">
+                        {notif.type === "like" ? (
+                          <span className="flex items-center gap-1 text-amber-400">
+                            <Heart className="w-4 h-4" /> {notif.user.name} a liké une affiche
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-blue-300">
+                            <MessageCircle className="w-4 h-4" /> {notif.user.name} a commenté :{" "}
+                            <span className="italic text-gray-200">"{notif.text}"</span>
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(notif.date).toLocaleString()}
+                      </div>
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
+            )}
+          </section>
+
+          {/* Statistiques */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {stats.map((stat, index) => {
+              const Icon = stat.icon
+              return (
+                <div
+                  key={stat.title}
+                  className="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-amber-400/20"
+                >
+                  <Icon className="w-8 h-8 text-amber-400 mb-2" />
+                  <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+                  <p className="text-gray-400">{stat.title}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Spectacles à venir */}
+          <div className="bg-gray-900/50 rounded-lg border border-amber-400/20">
+            <div className="p-4 border-b border-amber-400/20">
+              <h2 className="text-lg font-semibold text-amber-400">Spectacles à venir</h2>
+            </div>
+            <div className="divide-y divide-amber-400/20">
+              {upcomingShows.map((show) => (
+                <div key={show.title} className="p-4 hover:bg-gray-800/50 transition-colors">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium text-white">{show.title}</h3>
+                      <p className="text-sm text-gray-400">{show.venue}</p>
+                      <p className="text-sm text-gray-400">
+                        {show.date} à {show.time}
+                      </p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        show.status === "Confirmé"
+                          ? "bg-green-400/20 text-green-400"
+                          : "bg-amber-400/20 text-amber-400"
+                      }`}
+                    >
+                      {show.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </main>

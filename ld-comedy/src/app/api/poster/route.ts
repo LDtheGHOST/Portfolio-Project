@@ -39,27 +39,42 @@ export async function GET(req: Request) {
   return NextResponse.json({ posters });
 }
 
-// POST: Crée une nouvelle affiche (image + description) pour un théâtre donné
+// POST: Crée une nouvelle affiche (image + description) pour un théâtre ou un artiste
 export async function POST(req: Request) {
   const session = await getServerSession();
   if (!session?.user?.email) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  const user = await prisma.user.findUnique({ where: { email: session.user.email }, include: { theaterProfile: true } });
-  if (!user?.theaterProfile) return NextResponse.json({ error: "Profil théâtre non trouvé" }, { status: 404 });
-  const { imageUrl, description, theaterId } = await req.json();
-  let targetTheaterId = theaterId || user.theaterProfile.id;
-  // (Optionnel) Vérifier que l'utilisateur a le droit d'uploader pour ce théâtre
-  // Ici, on autorise seulement le théâtre du user connecté ou admin (à adapter si besoin)
-  if (targetTheaterId !== user.theaterProfile.id) {
-    // TODO: Ajouter une vérification d'admin si besoin
-    return NextResponse.json({ error: "Non autorisé à uploader pour ce théâtre" }, { status: 403 });
-  }
-  const poster = await prisma.poster.create({
-    data: {
-      imageUrl,
-      description,
-      theaterId: targetTheaterId,
-    },
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { theaterProfile: true, artistProfile: true },
   });
+  if (!user?.theaterProfile && !user?.artistProfile) {
+    return NextResponse.json({ error: "Profil théâtre ou artiste non trouvé" }, { status: 404 });
+  }
+  const { imageUrl, description, theaterId, artistId } = await req.json();
+
+  // Détermination du type d'utilisateur et de la cible
+  let data: any = { imageUrl, description };
+  if (user.theaterProfile && (theaterId || user.theaterProfile.id)) {
+    const targetTheaterId = theaterId || user.theaterProfile.id;
+    if (targetTheaterId !== user.theaterProfile.id) {
+      // TODO: Ajouter une vérification d'admin si besoin
+      return NextResponse.json({ error: "Non autorisé à uploader pour ce théâtre" }, { status: 403 });
+    }
+    data.theaterId = targetTheaterId;
+  } else if (user.artistProfile && (artistId || user.artistProfile.id)) {
+    const targetArtistId = artistId || user.artistProfile.id;
+    if (targetArtistId !== user.artistProfile.id) {
+      // TODO: Ajouter une vérification d'admin si besoin
+      return NextResponse.json({ error: "Non autorisé à uploader pour cet artiste" }, { status: 403 });
+    }
+    data.artistId = targetArtistId;
+    // Pour lier à un théâtre aussi, il faudrait adapter ici si besoin
+    // data.theaterId = ...
+  } else {
+    return NextResponse.json({ error: "Impossible de déterminer le profil cible" }, { status: 400 });
+  }
+
+  const poster = await prisma.poster.create({ data });
   return NextResponse.json({ poster });
 }
 

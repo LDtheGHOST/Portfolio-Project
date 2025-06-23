@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import MediaUploader from '@/components/ui/MediaUploader';
 import { addTheaterPoster, removeTheaterPoster } from '@/app/actions/theater-actions';
 import { User, MapPin, Users, Star, Facebook, Instagram, Globe, Youtube, Link as LinkIcon, Pencil, X, MessageCircle, Heart } from "lucide-react";
+import FriendButton from '@/components/FriendButton';
 
 export default function TheatreDetail() {
   const params = useParams();
@@ -345,7 +346,7 @@ export default function TheatreDetail() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-[#2d0b18] to-[#3a1c4d] text-white pt-24 md:pt-32">
-      {/* Header visuel avec padding top pour la navbar */}
+      {/* Header visuel du théâtre */}
       <div className="relative w-full h-96 md:h-[32rem] flex items-end justify-center bg-gradient-to-t from-black/90 via-[#2d0b18]/80 to-transparent">
         {banner ? (
           <img src={banner} alt="Bannière du théâtre" className="absolute inset-0 w-full h-full object-cover opacity-60" />
@@ -385,6 +386,8 @@ export default function TheatreDetail() {
             {socials.website && <a href={socials.website} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400"><Globe className="w-6 h-6" /></a>}
           </div>
         </div>
+        {/* Bouton ami pour ARTISTE visitant un théâtre */}
+        <FriendButton theaterId={id} isOwner={isOwner} />
       </div>
       {/* Section d'édition (bannière, photo, réseaux) affichée uniquement en mode édition */}
       {isOwner && editMode && (

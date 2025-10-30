@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client"
+import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import { NextResponse } from "next/server"
-
-const prisma = new PrismaClient()
 
 export async function POST(request: Request) {
   try {
@@ -93,7 +91,5 @@ export async function POST(request: Request) {
       { error: "❌ Erreur serveur lors de l'inscription. Veuillez réessayer." },
       { status: 500 }
     )
-  } finally {
-    await prisma.$disconnect()
   }
 }

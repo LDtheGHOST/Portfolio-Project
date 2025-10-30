@@ -24,7 +24,7 @@ L'authentification est basée sur NextAuth.js avec les composants suivants :
 - **Session** : JWT avec une durée de 30 jours
 test
 ### 3. Rôles utilisateurs
-
+test
 Le système supporte 4 rôles principaux :
 
 - `PENDING` : Utilisateur en attente de validation de rôle

@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 // Initialiser Resend avec votre clé API
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 'dummy-key-for-build');
 
 export interface EmailOptions {
   to: string;

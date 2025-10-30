@@ -5,10 +5,10 @@ import { motion } from "framer-motion"
 import { signIn, useSession } from "next-auth/react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState, type FormEvent, useEffect } from "react"
+import { useState, type FormEvent, useEffect, Suspense } from "react"
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"
 
-export default function Connexion() {
+function ConnexionContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
@@ -293,5 +293,24 @@ export default function Connexion() {
         </motion.div>
       </div>
     </main>
+  )
+}
+
+export default function Connexion() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-br from-black via-purple-950 to-red-950 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-black/40 backdrop-blur-md rounded-xl p-8 border border-amber-400/30"
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+          <p className="text-white font-medium">Chargement...</p>
+        </motion.div>
+      </main>
+    }>
+      <ConnexionContent />
+    </Suspense>
   )
 }

@@ -4,8 +4,11 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
+    console.log("📝 Début de l'inscription - Prisma initialisé:", !!prisma)
+
     // Récupérer les données du formulaire (avec firstName et lastName)
     const { email, password, firstName, lastName } = await request.json()
+    console.log("📧 Email reçu:", email)
 
     // Validation des données
     if (!email || !password || !firstName || !lastName) {
@@ -33,9 +36,11 @@ export async function POST(request: Request) {
     }
 
     // Vérifier si l'utilisateur existe déjà
+    console.log("🔍 Vérification de l'utilisateur existant...")
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() }
     })
+    console.log("✅ Vérification terminée, utilisateur trouvé:", !!existingUser)
 
     if (existingUser) {
       return NextResponse.json(
@@ -51,6 +56,7 @@ export async function POST(request: Request) {
     const fullName = `${firstName.trim()} ${lastName.trim()}`
 
     // Créer l'utilisateur (seulement avec les champs qui existent dans le schéma)
+    console.log("💾 Création de l'utilisateur dans la base de données...")
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase(),
@@ -60,6 +66,7 @@ export async function POST(request: Request) {
         isVerified: false // Pas encore vérifié
       }
     })
+    console.log("✅ Utilisateur créé avec succès, ID:", user.id)
 
     // Retourner les données sans le mot de passe
     const { password: _, ...userWithoutPassword } = user
@@ -75,16 +82,29 @@ export async function POST(request: Request) {
     )
 
   } catch (error) {
-    console.error("❌ Erreur lors de l'inscription:", error)
-    
+    console.error("❌ Erreur détaillée lors de l'inscription:", error)
+    console.error("❌ Type d'erreur:", typeof error)
+    console.error("❌ Stack trace:", error instanceof Error ? error.stack : 'No stack')
+
     // Gestion d'erreurs plus spécifique
     if (error instanceof Error) {
+      console.error("❌ Message d'erreur:", error.message)
+
       if (error.message.includes('Unique constraint')) {
         return NextResponse.json(
           { error: "❌ Un compte existe déjà avec cet email" },
           { status: 400 }
         )
       }
+
+      // Retourner le message d'erreur détaillé en développement
+      return NextResponse.json(
+        {
+          error: "❌ Erreur serveur lors de l'inscription. Veuillez réessayer.",
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(

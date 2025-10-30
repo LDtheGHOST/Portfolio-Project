@@ -90,3 +90,5 @@ const startConversation = async (friend: any) => {
 Le système de messagerie est maintenant **parfaitement synchronisé** avec le système d'amis existant, offrant une expérience utilisateur fluide et cohérente pour tous les utilisateurs de la plateforme LD Comedy ! 🎭✨
 
 test
+
+scanderd jtm

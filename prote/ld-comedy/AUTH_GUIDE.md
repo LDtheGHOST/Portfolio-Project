@@ -22,7 +22,7 @@ L'authentification est basée sur NextAuth.js avec les composants suivants :
 - **Provider** : `CredentialsProvider` pour l'authentification par email/mot de passe
 - **Adapter** : `PrismaAdapter` pour la persistance avec MongoDB
 - **Session** : JWT avec une durée de 30 jours
-
+test
 ### 3. Rôles utilisateurs
 
 Le système supporte 4 rôles principaux :

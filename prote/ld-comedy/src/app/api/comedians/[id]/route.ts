@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { ObjectId } from "mongodb"
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
@@ -10,14 +9,6 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
-
-    // Vérifie si l'ID est valide
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: "ID de l'artiste invalide" },
-        { status: 400 }
-      )
-    }
 
     // Récupère la session utilisateur
     const session = await getServerSession(authOptions);    // D'abord, essayons de trouver l'artistProfile par ID

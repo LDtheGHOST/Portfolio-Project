@@ -54,14 +54,71 @@ export default function DashboardArtiste() {
   ]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Définir les fonctions AVANT le useEffect
+  const loadStats = async () => {
+    try {
+      const response = await fetch('/api/artist/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats([
+          { title: "Spectacles donnés", value: data.totalShows?.toString() || "0", icon: Mic },
+          { title: "Note moyenne", value: data.averageRating?.toFixed(1) || "0", icon: Star },
+          { title: "Vues du profil", value: data.profileViews?.toString() || "0", icon: User },
+          { title: "Messages reçus", value: data.totalMessages?.toString() || "0", icon: MessageSquare },
+        ]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
+
+  const loadUnreadMessages = async () => {
+    try {
+      const response = await fetch('/api/messages/unread-count');
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadMessages(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des messages non lus:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('/api/artist/notifications');
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+      } else {
+        console.error('Erreur API notifications:', response.status, response.statusText);
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des notifications:', error);
+      setNotifications([]);
+    }
+  };
+
+  const loadFriends = async () => {
+    setFriendsLoading(true);
+    try {
+      const response = await fetch('/api/favorite/friends');
+      if (response.ok) {
+        const data = await response.json();
+        setFriends(data.friends || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des amis:', error);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      // Charger les notifications
-      fetch("/api/artist/notifications")
-        .then((res) => res.json())
-        .then((data) => setNotifications(data.notifications || []))
-        .catch((err) => console.error("Erreur notifications:", err));
-
       // Récupérer l'ID du profil artiste
       fetch("/api/artist/profile")
         .then((res) => res.json())
@@ -71,14 +128,18 @@ export default function DashboardArtiste() {
           }
         })
         .catch((err) => console.error("Erreur profil artiste:", err));
-        // Charger les statistiques
+
+      // Charger les statistiques
       loadStats();
-      
+
       // Charger les amis
       loadFriends();
 
       // Charger le nombre de messages non lus
       loadUnreadMessages();
+
+      // Charger les notifications
+      loadNotifications();
 
       // Écouter les nouveaux messages en temps réel (optionnel avec WebSocket)
       // Pour l'instant, on va utiliser un polling toutes les 30 secondes
@@ -143,14 +204,70 @@ function DashboardContent() {
   const [showAllNotifications, setShowAllNotifications] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
 
+  // Définir les fonctions AVANT le useEffect
+  const loadStats = async () => {
+    try {
+      const response = await fetch('/api/artist/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats([
+          { title: "Spectacles donnés", value: data.totalShows?.toString() || "0", icon: Mic },
+          { title: "Note moyenne", value: data.averageRating?.toFixed(1) || "0", icon: Star },
+          { title: "Vues du profil", value: data.profileViews?.toString() || "0", icon: User },
+          { title: "Messages reçus", value: data.totalMessages?.toString() || "0", icon: MessageSquare },
+        ]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
+
+  const loadUnreadMessages = async () => {
+    try {
+      const response = await fetch('/api/messages/unread-count');
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadMessages(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des messages non lus:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('/api/artist/notifications');
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data.notifications || []);
+      } else {
+        console.error('Erreur API notifications:', response.status, response.statusText);
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des notifications:', error);
+      setNotifications([]);
+    }
+  };
+
+  const loadFriends = async () => {
+    setFriendsLoading(true);
+    try {
+      const response = await fetch('/api/favorite/friends');
+      if (response.ok) {
+        const data = await response.json();
+        setFriends(data.friends || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des amis:', error);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      // Charger les notifications
-      fetch("/api/artist/notifications")
-        .then((res) => res.json())
-        .then((data) => setNotifications(data.notifications || []))
-        .catch((err) => console.error("Erreur notifications:", err));
-
       // Récupérer l'ID du profil artiste
       fetch("/api/artist/profile")
         .then((res) => res.json())
@@ -160,14 +277,12 @@ function DashboardContent() {
           }
         })
         .catch((err) => console.error("Erreur profil artiste:", err));
-        // Charger les statistiques
-      loadStats();
-      
-      // Charger les amis
-      loadFriends();
 
-      // Charger le nombre de messages non lus
+      // Charger toutes les données
+      loadStats();
+      loadFriends();
       loadUnreadMessages();
+      loadNotifications();
 
       // Écouter les nouveaux messages en temps réel (optionnel avec WebSocket)
       // Pour l'instant, on va utiliser un polling toutes les 30 secondes
@@ -215,22 +330,6 @@ function DashboardContent() {
       ],    },
   ]
 
-  // Fonction pour charger les amis
-  const loadFriends = async () => {
-    setFriendsLoading(true);
-    try {
-      const response = await fetch('/api/favorite/friends');
-      if (response.ok) {
-        const data = await response.json();
-        setFriends(data.friends || []);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des amis:', error);
-    } finally {
-      setFriendsLoading(false);
-    }
-  };
-
   // Fonction pour supprimer un ami
   const handleRemoveFriend = async (friend: any) => {
     const friendName = friend.name || friend.theater?.user?.name || 'cet ami';
@@ -266,51 +365,6 @@ function DashboardContent() {
       console.error('Erreur lors de la suppression:', error);
     } finally {
       setRemovingFriend(null);
-    }
-  };
-
-  // Fonction pour charger les statistiques
-  const loadStats = async () => {
-    try {
-      const response = await fetch('/api/artist/stats');
-      if (response.ok) {
-        const data = await response.json();
-        setStats([
-          { title: "Spectacles donnés", value: data.totalShows?.toString() || "0", icon: Mic },
-          { title: "Note moyenne", value: data.averageRating?.toFixed(1) || "0", icon: Star },
-          { title: "Vues du profil", value: data.profileViews?.toString() || "0", icon: User },
-          { title: "Messages reçus", value: data.totalMessages?.toString() || "0", icon: MessageSquare },
-        ]);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
-    }  };
-
-  // Fonction pour charger les messages non lus
-  const loadUnreadMessages = async () => {
-    try {
-      const response = await fetch('/api/messages/unread-count');      if (response.ok) {
-        const data = await response.json();
-        setUnreadMessages(data.count || 0);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des messages non lus:', error);
-    }
-  };  // Fonction pour charger les notifications
-  const loadNotifications = async () => {
-    try {
-      const response = await fetch('/api/artist/notifications');
-      
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      } else {
-        console.error('Erreur API notifications:', response.status, response.statusText);
-        setNotifications([]);
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error);
-      setNotifications([]);
     }
   };
 

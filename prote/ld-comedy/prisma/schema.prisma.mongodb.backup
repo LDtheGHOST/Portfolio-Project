@@ -43,8 +43,8 @@ model User {
 }
 
 model ArtistProfile {
-  id     String @id @default(uuid()) 
-  userId String @unique 
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Informations artistiques
@@ -73,7 +73,7 @@ model ArtistProfile {
   photos     Photo[]
 
   // Réseaux sociaux
-  socialLinks Json?
+  socialLinks SocialLinks?
 
   // Statistiques
   profileViews Int     @default(0)
@@ -91,21 +91,21 @@ model ArtistProfile {
 }
 
 model Show {
-  id        String   @id @default(uuid()) 
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   title     String
   venue     String
   date      DateTime
   time      String
   price     String?
   status    String   @default("UPCOMING")
-  artistId  String   
+  artistId  String   @db.ObjectId
   artist    User     @relation(fields: [artistId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Poster {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   imageUrl    String
   description String?
   createdAt   DateTime @default(now())
@@ -113,30 +113,30 @@ model Poster {
 
   // Relations - Les deux deviennent optionnelles pour permettre des posters d'artistes OU de théâtres
   theater   TheaterProfile? @relation(fields: [theaterId], references: [id], onDelete: Cascade)
-  theaterId String?         
+  theaterId String?         @db.ObjectId
   comments  PosterComment[]
 
   // Relation artiste (optionnelle)
   artist   ArtistProfile? @relation("ArtistPosters", fields: [artistId], references: [id], onDelete: SetNull)
-  artistId String?        
+  artistId String?        @db.ObjectId
 
   // Likes
   likes String[] // tableau d'id utilisateur qui ont liké
 }
 
 model PosterComment {
-  id        String   @id @default(uuid()) 
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   text      String
   createdAt DateTime @default(now())
   poster    Poster   @relation(fields: [posterId], references: [id], onDelete: Cascade)
-  posterId  String   
+  posterId  String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String   
+  userId    String   @db.ObjectId
 }
 
 model TheaterProfile {
-  id     String @id @default(uuid()) 
-  userId String @unique 
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Informations du théâtre
@@ -149,12 +149,12 @@ model TheaterProfile {
   city        String?
   postalCode  String?
   region      String?
-  coordinates Json?
+  coordinates Coordinates?
 
   // Caractéristiques techniques
   capacity   Int?
   stageType  String?
-  facilities Json?
+  facilities Facility[]
 
   // Types de programmation
   theaterType      String?
@@ -162,15 +162,15 @@ model TheaterProfile {
   preferredGenres  String[]
 
   // Informations pratiques
-  openingHours Json?
-  ticketPrices Json?
+  openingHours OpeningHours?
+  ticketPrices TicketPrices?
 
   // Images
   coverImage    String?
   galleryImages String[]
 
   // Réseaux sociaux
-  socialLinks Json?
+  socialLinks SocialLinks?
 
   // Paramètres
   isActive           Boolean @default(true)
@@ -192,7 +192,7 @@ model TheaterProfile {
 }
 
 model Event {
-  id          String  @id @default(uuid()) 
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
   image       String?
@@ -207,7 +207,7 @@ model Event {
 
   // Lieu
   theater   TheaterProfile? @relation("TheaterEvents", fields: [theaterId], references: [id])
-  theaterId String?         
+  theaterId String?         @db.ObjectId
   venue     String? // Si pas de théâtre associé
   address   String?
 
@@ -231,7 +231,7 @@ model Event {
 
   // Relations
   owner        User               @relation("EventOwner", fields: [ownerId], references: [id])
-  ownerId      String             
+  ownerId      String             @db.ObjectId
   participants EventParticipant[]
   bookings     Booking[]          @relation("EventBookings")
 
@@ -240,11 +240,11 @@ model Event {
 }
 
 model EventParticipant {
-  id       String            @id @default(uuid()) 
+  id       String            @id @default(auto()) @map("_id") @db.ObjectId
   event    Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId  String            
+  eventId  String            @db.ObjectId
   artist   ArtistProfile     @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  artistId String            
+  artistId String            @db.ObjectId
   role     String? // "Artiste principal", "Invité", "Ouverture"
   fee      Float? // Cachet
   status   ParticipantStatus @default(INVITED)
@@ -256,7 +256,7 @@ model EventParticipant {
 }
 
 model Video {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
   url         String
@@ -280,14 +280,14 @@ model Video {
 
   // Relations
   artist   ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  artistId String        
+  artistId String        @db.ObjectId
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Photo {
-  id          String   @id @default(uuid()) 
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String?
   description String?
   url         String
@@ -307,18 +307,18 @@ model Photo {
 
   // Relations
   artist   ArtistProfile @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  artistId String        
+  artistId String        @db.ObjectId
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Favorite {
-  id        String         @id @default(uuid()) 
-  theaterId String         
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  theaterId String         @db.ObjectId
   theater   TheaterProfile @relation(fields: [theaterId], references: [id], onDelete: Cascade)
   artist    ArtistProfile  @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  artistId  String         
+  artistId  String         @db.ObjectId
   notes     String? // Notes privées du théâtre
   
   // Nouveau système de demandes d'amis
@@ -332,7 +332,7 @@ model Favorite {
 }
 
 model Booking {
-  id          String        @id @default(uuid()) 
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
   startDate   DateTime
   endDate     DateTime?
   totalAmount Float
@@ -341,9 +341,9 @@ model Booking {
 
   // Relations
   user    User   @relation("UserBookings", fields: [userId], references: [id])
-  userId  String 
+  userId  String @db.ObjectId
   event   Event  @relation("EventBookings", fields: [eventId], references: [id])
-  eventId String 
+  eventId String @db.ObjectId
 
   // Informations de contact
   contactName  String?
@@ -352,6 +352,44 @@ model Booking {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Types composés
+type SocialLinks {
+  facebook  String?
+  instagram String?
+  youtube   String?
+  tiktok    String?
+  website   String?
+}
+
+type Coordinates {
+  lat Float
+  lng Float
+}
+
+type Facility {
+  name        String
+  available   Boolean
+  description String?
+}
+
+type OpeningHours {
+  monday    String?
+  tuesday   String?
+  wednesday String?
+  thursday  String?
+  friday    String?
+  saturday  String?
+  sunday    String?
+}
+
+type TicketPrices {
+  adult   Float?
+  student Float?
+  senior  Float?
+  child   Float?
+  group   Float?
 }
 
 // Enums
@@ -393,8 +431,8 @@ enum FavoriteStatus {
 
 // Nouveaux modèles pour le système de messagerie
 model Conversation {
-  id           String   @id @default(uuid()) 
-  participants String[]  // IDs des utilisateurs participants
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  participants String[] @db.ObjectId // IDs des utilisateurs participants
   lastMessage  String?  // Dernier message pour affichage rapide
   lastMessageAt DateTime?
   isActive     Boolean  @default(true)
@@ -409,10 +447,10 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(uuid()) 
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
   content        String
-  senderId       String   
-  conversationId String   
+  senderId       String   @db.ObjectId
+  conversationId String   @db.ObjectId
   isRead         Boolean  @default(false)
   readAt         DateTime?
   
@@ -427,7 +465,7 @@ model Message {
 }
 
 model Notification {
-  id      String           @id @default(uuid()) 
+  id      String           @id @default(auto()) @map("_id") @db.ObjectId
   type    NotificationType
   title   String
   message String
@@ -436,7 +474,7 @@ model Notification {
   data    Json? // Données supplémentaires (IDs d'objets, etc.)
   
   // Relations
-  userId String 
+  userId String @db.ObjectId
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
@@ -460,7 +498,7 @@ enum NotificationType {
 }
 
 model VerificationToken {
-  id         String   @id @default(uuid()) 
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   identifier String   // Email ou autre identifiant
   token      String   @unique
   expires    DateTime

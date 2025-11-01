@@ -167,3 +167,6 @@ NODE_ENV=development npm run dev
 - Tokens d'email sécurisés
 
 Cette configuration fournit une authentification complète et sécurisée pour l'application LD Comedy.
+
+
+testete  tttyrghgj

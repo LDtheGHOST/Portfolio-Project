@@ -41,9 +41,7 @@ export async function GET() {
     return NextResponse.json(theatres);
   } catch (error) {
     console.error("Error fetching theatres:", error);
-    return NextResponse.json(
-      { error: "Error fetching theatres" },
-      { status: 500 }
-    );
+    // Retourner un tableau vide au lieu d'un objet d'erreur pour éviter les erreurs .map()
+    return NextResponse.json([], { status: 200 });
   }
 }

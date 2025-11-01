@@ -73,9 +73,7 @@ export async function GET() {
 
   } catch (error) {
     console.error("Erreur lors de la récupération des artistes à succès:", error);
-    return NextResponse.json({ 
-      error: "Erreur serveur", 
-      details: error instanceof Error ? error.message : 'Unknown error' 
-    }, { status: 500 });
+    // Retourner un tableau vide au lieu d'un objet d'erreur pour éviter les erreurs .map()
+    return NextResponse.json([], { status: 200 });
   }
 }

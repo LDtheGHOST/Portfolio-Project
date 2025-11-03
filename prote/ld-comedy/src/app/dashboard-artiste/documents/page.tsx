@@ -125,8 +125,8 @@ export default function DocumentsPage() {
           </h2>
           <MediaUploader
             onUploadSuccess={handleDocumentUpload}
-            acceptedFileTypes={["application/pdf", ".doc", ".docx", ".txt"]}
-            maxSizeMB={10}
+            accept="application/pdf,.doc,.docx,.txt"
+            multiple={true}
           />
           <p className="text-gray-500 text-sm mt-3">
             Formats acceptés : PDF, DOC, DOCX, TXT (max 10 MB)

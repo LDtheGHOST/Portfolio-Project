@@ -366,14 +366,8 @@ export default function ComedienPublicPage() {
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300">Photo de profil</label>
                     <MediaUploader
-                      onUpload={async (files) => {
-                        if (files.length > 0) {
-                          const formData = new FormData();
-                          formData.append("file", files[0]);
-                          const res = await fetch("/api/upload", { method: "POST", body: formData });
-                          const data = await res.json();
-                          if (data.url) setEditProfile((p: any) => ({ ...p, profileImage: data.url }));
-                        }
+                      onUploadSuccess={(url) => {
+                        setEditProfile((p: any) => ({ ...p, profileImage: url }));
                       }}
                       accept="image/*"
                       multiple={false}
@@ -385,14 +379,8 @@ export default function ComedienPublicPage() {
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-300">Bannière</label>
                     <MediaUploader
-                      onUpload={async (files) => {
-                        if (files.length > 0) {
-                          const formData = new FormData();
-                          formData.append("file", files[0]);
-                          const res = await fetch("/api/upload", { method: "POST", body: formData });
-                          const data = await res.json();
-                          if (data.url) setEditProfile((p: any) => ({ ...p, coverImage: data.url }));
-                        }
+                      onUploadSuccess={(url) => {
+                        setEditProfile((p: any) => ({ ...p, coverImage: url }));
                       }}
                       accept="image/*"
                       multiple={false}
@@ -541,16 +529,8 @@ export default function ComedienPublicPage() {
           <div className="bg-gray-900 rounded-xl p-8 w-full max-w-lg border border-amber-400/30 relative">
             <button className="absolute top-2 right-2 text-gray-400 hover:text-amber-400" onClick={() => setShowPosterModal(false)}><X className="w-6 h-6" /></button>
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Ajouter une nouvelle affiche</h2>            <MediaUploader
-              onUpload={async (files) => {
-                if (files.length > 0) {
-                  const formData = new FormData();
-                  formData.append("file", files[0]);
-                  const res = await fetch("/api/upload", { method: "POST", body: formData });
-                  const data = await res.json();
-                  if (data.url) {
-                    setNewPoster(prev => ({ ...prev, imageUrl: data.url }));
-                  }
-                }
+              onUploadSuccess={(url) => {
+                setNewPoster(prev => ({ ...prev, imageUrl: url }));
               }}
               accept="image/*"
               multiple={false}

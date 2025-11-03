@@ -93,8 +93,8 @@ export default function GalleryPage() {
           </h2>
           <MediaUploader
             onUploadSuccess={handlePhotoUpload}
-            acceptedFileTypes={["image/*"]}
-            maxSizeMB={5}
+            accept="image/*"
+            multiple={true}
           />
         </div>
 

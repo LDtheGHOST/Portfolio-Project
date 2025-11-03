@@ -7,19 +7,24 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
+
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    // Trouver le profil artiste du user
-    const user = await prisma.user.findUnique({ 
-      where: { id: session.user.id }, 
-      include: { artistProfile: true } 
+    // Trouver le profil artiste du user par email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { artistProfile: true }
     });
 
-    if (!user?.artistProfile) {
-      return NextResponse.json({ error: "Profil artiste non trouvé" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 });
+    }
+
+    if (!user.artistProfile) {
+      // Si pas de profil artiste, retourner un tableau vide au lieu d'une erreur
+      return NextResponse.json({ notifications: [] });
     }
 
     const artistId = user.artistProfile.id;

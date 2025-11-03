@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from "react"
 import { useParams } from "next/navigation"
 import FriendButton from '@/components/FriendButton';
 import MediaUploader from "@/components/ui/MediaUploader"
-import { User, MapPin, Users, Star, Facebook, Instagram, Globe, Youtube, Pencil, X, MessageCircle, Heart } from "lucide-react";
+import { User, MapPin, Users, Star, Facebook, Instagram, Globe, Youtube, Pencil, X, MessageCircle, Heart, Camera, Save } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function ComedienPublicPage() {
@@ -291,127 +291,205 @@ export default function ComedienPublicPage() {
       </div>
       {/* Section d'édition (bannière, photo, réseaux) affichée uniquement en mode édition */}
       {editModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-          <div className="bg-gradient-to-br from-[#2d0b18] via-[#3a1c4d] to-black border border-amber-400/40 shadow-2xl rounded-3xl p-4 w-full max-w-xs relative animate-fade-in">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-amber-400" onClick={() => setEditModalOpen(false)}><X className="w-6 h-6" /></button>
-            <h2 className="text-lg font-bold text-amber-400 mb-2 text-center">Éditer le profil</h2>
-            <form onSubmit={handleEditSubmit} className="space-y-2">
-              <input
-                type="text"
-                className="w-full px-3 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                placeholder="Nom"
-                value={editProfile?.name || ""}
-                onChange={e => setEditProfile((p: any) => ({ ...p, name: e.target.value }))}
-              />
-              <input
-                type="text"
-                className="w-full px-3 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                placeholder="Spécialité"
-                value={editProfile?.specialty || ""}
-                onChange={e => setEditProfile((p: any) => ({ ...p, specialty: e.target.value }))}
-              />
-              <input
-                type="text"
-                className="w-full px-3 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                placeholder="Région"
-                value={editProfile?.region || ""}
-                onChange={e => setEditProfile((p: any) => ({ ...p, region: e.target.value }))}
-              />
-              <textarea
-                className="w-full px-3 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                placeholder="Bio"
-                value={editProfile?.bio || ""}
-                onChange={e => setEditProfile((p: any) => ({ ...p, bio: e.target.value }))}
-                rows={2}
-              />
-              {/* Réseaux sociaux avec icônes */}
-              <div className="flex gap-2 justify-center">
-                <div className="relative flex-1">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none"><Facebook className="w-4 h-4" /></span>
-                  <input
-                    type="text"
-                    className="w-full pl-8 pr-2 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                    placeholder="Lien Facebook"
-                    value={editProfile?.socialLinks?.facebook || ""}
-                    onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, facebook: e.target.value } }))}
-                  />
-                </div>
-                <div className="relative flex-1">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none"><Instagram className="w-4 h-4" /></span>
-                  <input
-                    type="text"
-                    className="w-full pl-8 pr-2 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                    placeholder="Lien Instagram"
-                    value={editProfile?.socialLinks?.instagram || ""}
-                    onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, instagram: e.target.value } }))}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 justify-center">
-                <div className="relative flex-1">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none"><Youtube className="w-4 h-4" /></span>
-                  <input
-                    type="text"
-                    className="w-full pl-8 pr-2 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                    placeholder="Lien YouTube"
-                    value={editProfile?.socialLinks?.youtube || ""}
-                    onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, youtube: e.target.value } }))}
-                  />
-                </div>
-                <div className="relative flex-1">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none"><Globe className="w-4 h-4" /></span>
-                  <input
-                    type="text"
-                    className="w-full pl-8 pr-2 py-2 rounded-2xl bg-gray-900 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 outline-none"
-                    placeholder="Site web"
-                    value={editProfile?.socialLinks?.website || ""}
-                    onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, website: e.target.value } }))}
-                  />
-                </div>
-              </div>
-              {/* Upload images (MediaUploader à brancher ici) */}
-              <div className="space-y-1">
-                <label className="text-xs text-gray-300">Photo de profil</label>
-                <MediaUploader
-                  onUpload={async (files) => {
-                    if (files.length > 0) {
-                      const formData = new FormData();
-                      formData.append("file", files[0]);
-                      const res = await fetch("/api/upload", { method: "POST", body: formData });
-                      const data = await res.json();
-                      if (data.url) setEditProfile((p: any) => ({ ...p, profileImage: data.url }));
-                    }
-                  }}
-                  accept="image/*"
-                  multiple={false}
-                />
-                {editProfile?.profileImage && (
-                  <img src={editProfile.profileImage} alt="Profil" className="w-14 h-14 rounded-full object-cover border-2 border-amber-400 mx-auto mt-1" />
-                )}
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-gray-300">Bannière</label>
-                <MediaUploader
-                  onUpload={async (files) => {
-                    if (files.length > 0) {
-                      const formData = new FormData();
-                      formData.append("file", files[0]);
-                      const res = await fetch("/api/upload", { method: "POST", body: formData });
-                      const data = await res.json();
-                      if (data.url) setEditProfile((p: any) => ({ ...p, coverImage: data.url }));
-                    }
-                  }}
-                  accept="image/*"
-                  multiple={false}
-                />
-                {editProfile?.coverImage && (
-                  <img src={editProfile.coverImage} alt="Bannière" className="w-full h-12 object-cover rounded-2xl border-2 border-amber-400 mx-auto mt-1" />
-                )}
-              </div>
-              <button type="submit" disabled={editLoading} className="w-full bg-amber-400 hover:bg-amber-500 text-black font-bold px-4 py-2 rounded-2xl transition-colors mt-2">
-                {editLoading ? "Enregistrement..." : "Enregistrer"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 overflow-y-auto">
+          <div className="bg-gradient-to-br from-[#2d0b18] via-[#3a1c4d] to-black border border-amber-400/40 shadow-2xl rounded-2xl w-full max-w-2xl relative my-8">
+            {/* Header avec titre et bouton fermer */}
+            <div className="flex items-center justify-between p-6 border-b border-amber-400/20">
+              <h2 className="text-2xl font-bold text-amber-400">Éditer le profil</h2>
+              <button
+                className="text-gray-400 hover:text-amber-400 transition-colors"
+                onClick={() => setEditModalOpen(false)}
+              >
+                <X className="w-6 h-6" />
               </button>
+            </div>
+
+            {/* Formulaire scrollable */}
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
+              {/* Informations de base */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-amber-300 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Informations personnelles
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Nom</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="Votre nom complet"
+                      value={editProfile?.name || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, name: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Spécialité</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="Stand-up, Improvisation..."
+                      value={editProfile?.specialty || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, specialty: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Région</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                    placeholder="Paris, Lyon, Marseille..."
+                    value={editProfile?.region || ""}
+                    onChange={e => setEditProfile((p: any) => ({ ...p, region: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Biographie</label>
+                  <textarea
+                    className="w-full px-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all resize-none"
+                    placeholder="Parlez-nous de votre parcours..."
+                    value={editProfile?.bio || ""}
+                    onChange={e => setEditProfile((p: any) => ({ ...p, bio: e.target.value }))}
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* Photos */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-amber-300 flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Photos
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Photo de profil</label>
+                    <MediaUploader
+                      onUpload={async (files) => {
+                        if (files.length > 0) {
+                          const formData = new FormData();
+                          formData.append("file", files[0]);
+                          const res = await fetch("/api/upload", { method: "POST", body: formData });
+                          const data = await res.json();
+                          if (data.url) setEditProfile((p: any) => ({ ...p, profileImage: data.url }));
+                        }
+                      }}
+                      accept="image/*"
+                      multiple={false}
+                    />
+                    {editProfile?.profileImage && (
+                      <img src={editProfile.profileImage} alt="Profil" className="w-24 h-24 rounded-full object-cover border-4 border-amber-400 mx-auto mt-2" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-300">Bannière</label>
+                    <MediaUploader
+                      onUpload={async (files) => {
+                        if (files.length > 0) {
+                          const formData = new FormData();
+                          formData.append("file", files[0]);
+                          const res = await fetch("/api/upload", { method: "POST", body: formData });
+                          const data = await res.json();
+                          if (data.url) setEditProfile((p: any) => ({ ...p, coverImage: data.url }));
+                        }
+                      }}
+                      accept="image/*"
+                      multiple={false}
+                    />
+                    {editProfile?.coverImage && (
+                      <img src={editProfile.coverImage} alt="Bannière" className="w-full h-24 object-cover rounded-lg border-2 border-amber-400 mt-2" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Réseaux sociaux */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-amber-300 flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  Réseaux sociaux
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none">
+                      <Facebook className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="Facebook"
+                      value={editProfile?.socialLinks?.facebook || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, facebook: e.target.value } }))}
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none">
+                      <Instagram className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="Instagram"
+                      value={editProfile?.socialLinks?.instagram || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, instagram: e.target.value } }))}
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none">
+                      <Youtube className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="YouTube"
+                      value={editProfile?.socialLinks?.youtube || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, youtube: e.target.value } }))}
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 pointer-events-none">
+                      <Globe className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 rounded-lg bg-gray-900/50 border border-amber-400/20 text-white focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none transition-all"
+                      placeholder="Site web"
+                      value={editProfile?.socialLinks?.website || ""}
+                      onChange={e => setEditProfile((p: any) => ({ ...p, socialLinks: { ...p.socialLinks, website: e.target.value } }))}
+                    />
+                  </div>
+                </div>
+              </div>
             </form>
+
+            {/* Footer avec boutons d'action */}
+            <div className="p-6 border-t border-amber-400/20 bg-black/30 rounded-b-2xl flex flex-col sm:flex-row gap-3 justify-end sticky bottom-0">
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleEditSubmit}
+                disabled={editLoading}
+                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-amber-400 hover:bg-amber-500 text-black font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {editLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Enregistrer
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

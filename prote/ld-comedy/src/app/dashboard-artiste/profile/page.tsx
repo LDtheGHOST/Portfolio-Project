@@ -86,13 +86,43 @@ export default function ProfileArtiste() {
   }, [status, router])
 
   const loadProfileData = async () => {
-    // Simulation du chargement des données
-    setProfileData(prev => ({
-      ...prev,
-      nom: session?.user?.name?.split(' ')[1] || "",
-      prenom: session?.user?.name?.split(' ')[0] || "",
-      email: session?.user?.email || "",
-    }))
+    try {
+      const response = await fetch('/api/artist/profile');
+      if (response.ok) {
+        const data = await response.json();
+        const user = data.user;
+        const profile = data.profile;
+
+        setProfileData({
+          // Informations personnelles depuis User
+          nom: user?.name?.split(' ')[1] || "",
+          prenom: user?.name?.split(' ')[0] || "",
+          nomArtiste: profile?.stageName || "",
+          email: user?.email || "",
+          telephone: user?.phoneNumber || "",
+          dateNaissance: "",
+          ville: profile?.location || "",
+          codePostal: "",
+          adresse: user?.address || "",
+
+          // Informations artistiques depuis ArtistProfile
+          discipline: user?.specialty || "",
+          specialites: profile?.specialties || [],
+          experience: profile?.experience || "",
+          biographie: profile?.bio || user?.description || "",
+          disponibilite: profile?.isAvailable ? "Disponible" : "Non disponible",
+
+          // Médias
+          photoProfile: user?.profileImage || "",
+
+          // Préférences
+          typesEvenements: [],
+          rayonIntervention: profile?.maxDistance?.toString() || "",
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du profil:', error);
+    }
   }
 
   const handleInputChange = (field, value) => {
@@ -114,11 +144,45 @@ export default function ProfileArtiste() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // Ici vous enverriez les données à votre API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setIsEditing(false)
+      const response = await fetch('/api/artist/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          // Données User
+          name: `${profileData.prenom} ${profileData.nom}`,
+          profileImage: profileData.photoProfile,
+          description: profileData.biographie,
+          specialty: profileData.discipline,
+          phoneNumber: profileData.telephone,
+          address: profileData.adresse,
+
+          // Données ArtistProfile
+          stageName: profileData.nomArtiste,
+          bio: profileData.biographie,
+          specialties: profileData.specialites,
+          experience: profileData.experience,
+          location: profileData.ville,
+          isAvailable: profileData.disponibilite === "Disponible",
+          maxDistance: parseInt(profileData.rayonIntervention) || null,
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Profil mis à jour:', data);
+        setIsEditing(false);
+        // Recharger les données pour afficher les changements
+        await loadProfileData();
+      } else {
+        const error = await response.json();
+        console.error('Erreur lors de la sauvegarde:', error);
+        alert(error.error || 'Erreur lors de la sauvegarde du profil');
+      }
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error)
+      alert('Erreur lors de la communication avec le serveur');
     } finally {
       setIsSaving(false)
     }

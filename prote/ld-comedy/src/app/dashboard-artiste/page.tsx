@@ -380,8 +380,8 @@ function DashboardContent() {
               <span className="text-xl font-bold text-amber-400 ml-2">Espace Artiste</span>
             </div>
 
-            {/* Bouton retour à l'accueil */}
-            <div className="p-4 border-b border-amber-400/20">
+            {/* Boutons de navigation */}
+            <div className="p-4 border-b border-amber-400/20 space-y-2">
               <Link
                 href="/"
                 className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-400 hover:text-amber-400 hover:bg-gray-800 rounded-lg transition-colors group"
@@ -389,6 +389,15 @@ function DashboardContent() {
                 <ArrowLeft className="w-5 h-5 mr-3 group-hover:text-amber-400" />
                 <span>Retour à l'accueil</span>
               </Link>
+              {artistProfileId && (
+                <Link
+                  href={`/comediens/${artistProfileId}`}
+                  className="flex items-center w-full px-3 py-2 text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-400/10 rounded-lg transition-colors group border border-amber-400/30"
+                >
+                  <User className="w-5 h-5 mr-3" />
+                  <span>Voir mon profil public</span>
+                </Link>
+              )}
             </div>
           </div>
 

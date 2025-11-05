@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Clock,
   Edit3,
+  Eye,
 } from "lucide-react"
 import Link from "next/link"
 import MediaUploader from '@/components/ui/MediaUploader';
@@ -24,6 +25,7 @@ export default function ProfileArtiste() {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [artistProfileId, setArtistProfileId] = useState<string | null>(null)
   const [profileData, setProfileData] = useState({
     // Informations personnelles
     nom: "",
@@ -92,6 +94,11 @@ export default function ProfileArtiste() {
         const data = await response.json();
         const user = data.user;
         const profile = data.profile;
+
+        // Récupérer l'ID du profil artiste
+        if (profile?.id) {
+          setArtistProfileId(profile.id);
+        }
 
         setProfileData({
           // Informations personnelles depuis User
@@ -227,29 +234,42 @@ export default function ProfileArtiste() {
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Bouton Voir profil public */}
+              {artistProfileId && !isEditing && (
+                <Link
+                  href={`/comediens/${artistProfileId}`}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center transition-colors text-sm"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Voir profil public</span>
+                  <span className="sm:hidden">Profil</span>
+                </Link>
+              )}
+
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
                   className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg flex items-center transition-colors"
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
-                  Modifier
+                  <span className="hidden sm:inline">Modifier</span>
+                  <span className="sm:hidden">Éditer</span>
                 </button>
               ) : (
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors disabled:opacity-50"
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center transition-colors disabled:opacity-50 text-sm"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? "Sauvegarde..." : "Sauvegarder"}
+                    {isSaving ? "..." : "Sauvegarder"}
                   </button>
                 </div>
               )}
@@ -261,22 +281,30 @@ export default function ProfileArtiste() {
         <main className="p-4 space-y-6">
           {/* Photo de profil */}
           <div className="bg-gray-900/50 rounded-xl p-6 border border-amber-400/20">
-            <div className="flex items-center space-x-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-amber-400/20 flex items-center justify-center">
-                  {profileData.photoProfile ? (
-                    <img src={profileData.photoProfile} alt="Photo de profil" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <User className="w-8 h-8 text-gray-400" />
-                  )}
+            <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-gray-800 border-2 border-amber-400/20 flex items-center justify-center overflow-hidden">
+                    {profileData.photoProfile ? (
+                      <img src={profileData.photoProfile} alt="Photo de profil" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-8 h-8 text-gray-400" />
+                    )}
+                  </div>
                 </div>
                 {isEditing && (
-                  <button className="absolute bottom-0 right-0 bg-amber-400 hover:bg-amber-500 p-2 rounded-full transition-colors">
-                    <Camera className="w-3 h-3 text-black" />
-                  </button>
+                  <div className="w-full">
+                    <MediaUploader
+                      onUploadSuccess={(url) => {
+                        setProfileData(prev => ({ ...prev, photoProfile: url }));
+                      }}
+                      accept="image/*"
+                      multiple={false}
+                    />
+                  </div>
                 )}
               </div>
-              <div>
+              <div className="text-center md:text-left flex-1">
                 <h2 className="text-xl font-bold text-white">
                   {profileData.nomArtiste || `${profileData.prenom} ${profileData.nom}` || "Nom d'artiste"}
                 </h2>

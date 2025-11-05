@@ -7,7 +7,12 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfeat: implement full profile data persistence and navigation\n\nBackend API Fixes:\n- Added GET and improved PATCH for /api/artist/profile to load and save all profile fields\n- Added GET and improved PATCH for /api/theater/profile with comprehensive field handling\n- Both APIs now properly separate User and Profile data (Artist/Theater)\n- APIs create profiles if they don''t exist and update existing ones\n- Full support for all profile fields: bio, specialty, location, social links, images, etc.\n\nFrontend Fixes:\n- Fixed artist profile page to load data from API instead of mock data\n- Implemented proper save functionality with API calls in profile editor\n- Profile data now persists correctly to PostgreSQL database\n- Added real-time feedback on save success/failure\n\nNavigation Improvements:\n- Added \"Dashboard\" button on public profile pages (visible only to owner)\n- Added \"View Public Profile\" button in artist dashboard sidebar\n- Improved navigation flow between dashboard and public profile views\n- Users can now easily switch between editing and viewing their profiles\n\nImpact: Profiles now save and display correctly on both dashboard and public pages\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push)",
       "Bash(git commit:*)",
-      "Bash(npx tsc --noEmit)"
+      "Bash(npx tsc --noEmit)",
+      "Bash(dir:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(pkill:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

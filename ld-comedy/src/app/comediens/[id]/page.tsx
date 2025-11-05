@@ -233,21 +233,6 @@ export default function ComedienPublicPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-black via-[#2d0b18] to-[#3a1c4d] text-white pt-24 md:pt-32">
-      {/* Bouton retour au dashboard (si propriétaire) */}
-      {isOwner && (
-        <div className="fixed top-4 right-4 z-50">
-          <a
-            href="/dashboard-artiste"
-            className="bg-black/80 hover:bg-black text-amber-400 hover:text-amber-300 font-semibold px-4 py-2 rounded-lg shadow-lg border border-amber-400/50 hover:border-amber-400 transition-all flex items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-            </svg>
-            Dashboard
-          </a>
-        </div>
-      )}
-
       {/* Header visuel artiste */}
       <div className="relative w-full h-96 md:h-[32rem] flex items-end justify-center bg-gradient-to-t from-black/90 via-[#2d0b18]/80 to-transparent">
         {artist.coverImage ? (

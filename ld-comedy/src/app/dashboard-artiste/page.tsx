@@ -512,6 +512,17 @@ function DashboardContent() {
                   )}
                 </div>
               )}
+              {artistProfileId && (
+                <Link
+                  href={`/comediens/${artistProfileId}`}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center transition-colors text-sm"
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  <span className="hidden md:inline">Voir mon profil</span>
+                  <span className="md:hidden">Profil</span>
+                </Link>
+              )}
+
 
               <button
                 className="bg-amber-400 hover:bg-amber-500 text-black px-4 py-2 rounded-lg flex items-center transition-colors"

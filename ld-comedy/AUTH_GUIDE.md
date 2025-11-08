@@ -169,4 +169,4 @@ NODE_ENV=development npm run dev
 Cette configuration fournit une authentification complète et sécurisée pour l'application LD Comedy.
 
 
-testete  tttyrghgjdddd
+testete  tttyrghgj
